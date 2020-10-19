@@ -10,17 +10,19 @@ const index = async (ctx, next) => {
 }
 
 const create = async (ctx, next) => {
-  const todo = await prisma.todo.create({data: ctx.request.body})
+  const todo = await prisma.todo.create({
+    data: ctx.request.body
+  })
   ctx.body = todo
 }
 
 const update = async (ctx, next) => {
   const todo = await prisma.todo.update({
-    where: { id: parseInt(ctx.body.id) },
-    data: { complete: ctx.body.complete }
+    where: { id: parseInt(ctx.params.id) },
+    data: ctx.request.body
   })
 
-  ctx.body = todo
+  ctx.status = 204
 }
 
 const destroy = async (ctx, next) => {

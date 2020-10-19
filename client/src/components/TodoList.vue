@@ -4,7 +4,7 @@
       class="todolist__field"
       v-model="newTask"
       placeholder="New task"
-      @keyup.enter="addNewTask" />
+      @keyup.enter="createTask" />
 
     <br>
 
@@ -14,12 +14,12 @@
         <div
           class="tasks__item"
           :class="{completed: task.completed}"
-          v-for="(task, index) in tasks"
-          :key="index"
-          @click="toggleTaskStatus(index)"
+          v-for="task in tasks"
+          :key="task.id"
+          @click="toggleTaskStatus(task.id)"
         >
           {{task.title}}
-          <span class="close" @click="removeTask(index)"></span>
+          <span class="close" @click.stop="removeTask(task.id)"></span>
         </div>
       </template>
     </div>
@@ -38,33 +38,73 @@
 </template>
 
 <script>
-  // import moment from 'moment'
+  import moment from 'moment'
+
+  const API = 'http://localhost:5000'
 
   export default {
     name: 'TodoList',
-    data () {
-      return {
-        newTask: null,
-        filter: 'All',
-        tasks: [
-          { title: 'Meet George', completed: false, createdAt: '18-10-2020' },
-          { title: 'Buy eggs', completed: false, createdAt: '18-10-2020' },
-          { title: 'Read a book', completed: false, createdAt: '17-10-2020' },
-          { title: 'Organize office', completed: true, createdAt: '19-10-2020' }
-        ],
-        filters: ['All', 'Active', 'Completed']
-      }
+    data: () => ({
+      newTask: null,
+      filter: 'All',
+      tasks: [],
+      filters: ['All', 'Active', 'Completed']
+    }),
+    created () {
+      this.loadTasks()
     },
     methods: {
-      addNewTask () {
-        this.tasks.push({ title: this.newTask, completed: false })
-        this.newTask = null
+      async loadTasks () {
+        const resp = await fetch(`${API}/todos`)
+        if (resp.ok)
+          this.tasks = await resp.json()
+        else
+          console.warn(resp.status)
       },
-      toggleTaskStatus (index) {
-        this.tasks[index].completed = !this.tasks[index].completed
-      },
-      removeTask () {
+      async createTask () {
+        const payload = { title: this.newTask }
+        const headers = { 'Content-Type': 'application/json' }
+        const resp = await fetch(`${API}/todos`, {
+          method: 'post',
+          headers: headers,
+          body: JSON.stringify(payload)
+        })
 
+        if (resp.ok) {
+          this.tasks.push(await resp.json())
+          this.newTask = null
+        } else {
+          console.warn(resp.status)
+        }
+      },
+      async toggleTaskStatus (id) {
+        const task = this.tasks.find(task => task.id === id)
+        const payload = { completed: !task.completed }
+        const headers = { 'Content-Type': 'application/json' }
+        const resp = await fetch(`${API}/todos/${id}`, {
+          method: 'put',
+          headers: headers,
+          body: JSON.stringify(payload)
+        })
+
+        if (resp.ok)
+          task.completed = payload.completed
+        else
+          console.warn(resp.status)
+      },
+      async removeTask (id) {
+        const headers = { 'Content-Type': 'application/json' }
+        const resp = await fetch(`${API}/todos/${id}`, {
+          method: 'delete',
+          headers: headers
+        })
+
+        if (resp.ok) {
+          const taskIdx = this.tasks.findIndex(task => task.id === id)
+          this.tasks.splice(taskIdx, 1)
+        } else {
+          console.warn(resp.status)
+        }
       }
     },
     computed: {
@@ -80,18 +120,14 @@
           tasks = this.tasks.filter(task => task.completed)
         }
 
-        tasks = tasks.reduce((acc, val) => {
-          acc[val.createdAt] = acc[val.createdAt] || []
-          acc[val.createdAt].push(val)
-          return acc
-        }, {})
-
-        tasks = Object.keys(tasks).sort().reduce((acc, date) => {
-          acc[date] = tasks[date]
-          return acc
-        }, {})
-
         return tasks
+          .sort((a, b) => moment(b.createdAt) - moment(a.createdAt))
+          .reduce((acc, val) => {
+            const formatedDate = moment(val.createdAt).format('ll')
+            acc[formatedDate] = acc[formatedDate] || []
+            acc[formatedDate].push(val)
+            return acc
+          }, {})
       }
     }
   }

@@ -1,0 +1,38 @@
+{
+  "name": "koa-todolist",
+  "version": "0.0.1",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "dotenv -e .env -- nodemon --experimental-specifier-resolution=node app.js",
+    "test": "dotenv -e test.env -- jest --runInBand --forceExit --detectOpenHandles",
+    "prisma:generate": "dotenv -e .env -- prisma generate",
+    "prisma:generate:test": "dotenv -e test.env -- prisma generate",
+    "migrate:dev": "dotenv -e .env -- prisma migrate up --experimental",
+    "migrate:test": "dotenv -e test.env -- prisma migrate up --experimental"
+  },
+  "dependencies": {
+    "@prisma/client": "2.7.1",
+    "koa": "^2.13.0",
+    "koa-bodyparser": "^4.3.0",
+    "koa-logger": "^3.2.1",
+    "koa-router": "^9.4.0",
+    "koa-views": "^6.3.0",
+    "pg": "^8.3.3",
+    "pug": "^3.0.0",
+    "vue": "^3.0.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.11.6",
+    "@babel/preset-env": "^7.11.5",
+    "@prisma/cli": "2.7.1",
+    "@vue/cli": "^4.5.6",
+    "babel-jest": "^26.3.0",
+    "dotenv": "^8.2.0",
+    "dotenv-cli": "^4.0.0",
+    "jest": "^26.4.2",
+    "nodemon": "^2.0.4",
+    "regenerator-runtime": "^0.13.7",
+    "supertest": "^4.0.2"
+  }
+}

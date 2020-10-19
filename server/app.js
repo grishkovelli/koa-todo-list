@@ -7,7 +7,6 @@ import path from 'path'
 
 const app = new Koa()
 const render = views(`${path.resolve()}/app/views`, { extension: 'pug' })
-const srcPort = 5000
 
 app
   .use(Logger())
@@ -15,6 +14,7 @@ app
   .use(render)
   .use(routes.routes())
   .use(routes.allowedMethods())
-  .listen(srcPort, () => {
-    console.log(`Server running on port ${srcPort}`)
-  })
+
+export default app.listen(process.env.PORT, () => {
+  console.log(`Server running on port ${process.env.PORT}`)
+})

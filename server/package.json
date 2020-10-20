@@ -9,7 +9,8 @@
     "prisma:generate": "dotenv -e .env -- prisma generate",
     "prisma:generate:test": "dotenv -e test.env -- prisma generate",
     "migrate:dev": "dotenv -e .env -- prisma migrate up --experimental",
-    "migrate:test": "dotenv -e test.env -- prisma migrate up --experimental"
+    "migrate:test": "dotenv -e test.env -- prisma migrate up --experimental",
+    "db:seed": "dotenv -e .env -- node prisma/seed.js"
   },
   "dependencies": {
     "@koa/cors": "^3.1.0",

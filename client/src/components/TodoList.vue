@@ -6,7 +6,7 @@
       placeholder="New task"
       @keyup.enter="createTask" />
 
-    <br>
+    <div class="divider"></div>
 
     <div class="tasks">
       <template v-for="(tasks, date) in filteredTasks" :key="date">
@@ -16,15 +16,28 @@
           :class="{completed: task.completed}"
           v-for="task in tasks"
           :key="task.id"
-          @click="toggleTaskStatus(task.id)"
+          @click="toggleTaskStatus(task)"
         >
           {{task.title}}
-          <span class="close" @click.stop="removeTask(task.id)"></span>
+          <drop-down>
+            <div class="colors">
+              <div
+                class="colors__item"
+                :class="`colors__item--${color}`"
+                v-for="color in colors"
+                :key="color"
+                @click="colorTask(color, task)"></div>
+            </div>
+            <div class="separator"></div>
+            <div class="remove" @click="removeTask(task.id)">Remove</div>
+          </drop-down>
+
+          <div class="tasks__color" :class="`tasks__color--${task.color}`"></div>
         </div>
       </template>
     </div>
 
-    <br>
+    <div class="divider"></div>
 
     <div class="filter">
       <div
@@ -39,6 +52,7 @@
 
 <script>
   import moment from 'moment'
+  import DropDown from './DropDown'
 
   const API = 'http://localhost:5000'
 
@@ -48,8 +62,12 @@
       newTask: null,
       filter: 'All',
       tasks: [],
-      filters: ['All', 'Active', 'Completed']
+      filters: ['All', 'Active', 'Completed'],
+      colors: ['none', 'red', 'blue', 'green', 'gold']
     }),
+    components: {
+      DropDown
+    },
     created () {
       this.loadTasks()
     },
@@ -77,11 +95,10 @@
           console.warn(resp.status)
         }
       },
-      async toggleTaskStatus (id) {
-        const task = this.tasks.find(task => task.id === id)
+      async toggleTaskStatus (task) {
         const payload = { completed: !task.completed }
         const headers = { 'Content-Type': 'application/json' }
-        const resp = await fetch(`${API}/todos/${id}`, {
+        const resp = await fetch(`${API}/todos/${task.id}`, {
           method: 'put',
           headers: headers,
           body: JSON.stringify(payload)
@@ -105,6 +122,20 @@
         } else {
           console.warn(resp.status)
         }
+      },
+      async colorTask (color, task) {
+        const payload = { color: color }
+        const headers = { 'Content-Type': 'application/json' }
+        const resp = await fetch(`${API}/todos/${task.id}`, {
+          method: 'put',
+          headers: headers,
+          body: JSON.stringify(payload)
+        })
+
+        if (resp.ok)
+          task.color = color
+        else
+          console.warn(resp.status)
       }
     },
     computed: {
@@ -138,13 +169,15 @@
     width: 320px;
     border: 1px solid #ccc;
     margin: 0 auto;
-    padding: 24px;
+    padding: 12px 24px 12px 24px;
     display: flex;
     flex-direction: column;
 
     &__field {
       padding: 12px 16px;
       font-size: 16px;
+      border-width: 0 0 1px 0;
+      margin-bottom: 8px;
 
       &:focus {
         outline: none;
@@ -153,6 +186,8 @@
   }
 
   .tasks {
+    height: 350px;
+    overflow-y: auto;
 
     &__date {
       text-align: left;
@@ -162,6 +197,7 @@
     }
 
     &__item {
+      position: relative;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -169,12 +205,40 @@
       text-align: left;
       margin-bottom: 5px;
       font-size: 16px;
-      padding: 0 16px;
+      padding: 0 0 0 16px;
     }
 
     &__item.completed {
       opacity: 0.5;
       text-decoration: line-through;
+    }
+
+    &__color {
+      position: absolute;
+      left: 0;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+
+      &--red {
+        background-color: red;
+        border-color: red;
+      }
+
+      &--blue {
+        background-color: blue;
+        border-color: blue;
+      }
+
+      &--green {
+        background-color: green;
+        border-color: green;
+      }
+
+      &--gold {
+        background-color: gold;
+        border-color: gold;
+      }
     }
   }
 
@@ -206,5 +270,54 @@
       display: inline-block;
       content: "\00d7";
     }
+  }
+
+  .divider {
+    margin-bottom: 8px;
+  }
+
+  .separator {
+    width: 100%;
+    height: 1px;
+    background-color: gray;
+    opacity: 0.3;
+  }
+
+  .colors {
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    padding: 8px;
+
+    &__item {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 1px solid #000;
+
+      &--red {
+        background-color: red;
+        border-color: red;
+      }
+
+      &--blue {
+        background-color: blue;
+        border-color: blue;
+      }
+
+      &--green {
+        background-color: green;
+        border-color: green;
+      }
+
+      &--gold {
+        background-color: gold;
+        border-color: gold;
+      }
+    }
+  }
+
+  .remove {
+    padding: 8px;
   }
 </style>

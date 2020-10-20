@@ -8,9 +8,10 @@
     "test": "dotenv -e test.env -- jest --runInBand --forceExit --detectOpenHandles",
     "prisma:generate": "dotenv -e .env -- prisma generate",
     "prisma:generate:test": "dotenv -e test.env -- prisma generate",
-    "migrate:dev": "dotenv -e .env -- prisma migrate up --experimental",
-    "migrate:test": "dotenv -e test.env -- prisma migrate up --experimental",
-    "db:seed": "dotenv -e .env -- node prisma/seed.js"
+    "db:migrations": "dotenv -e .env -- prisma  migrate save  --experimental",
+    "db:seed": "dotenv -e .env -- node prisma/seed.js",
+    "db:migrate": "dotenv -e .env -- prisma migrate up --experimental",
+    "db:migrate:test": "dotenv -e test.env -- prisma migrate up --experimental"
   },
   "dependencies": {
     "@koa/cors": "^3.1.0",

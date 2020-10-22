@@ -1,26 +1,31 @@
 <template>
-  <h1>To Do List</h1>
-  <todo-list />
+  <div class="app">
+    <groups/> <todo-list />
+  </div>
 </template>
 
 <script>
+import Groups from './components/Groups.vue'
 import TodoList from './components/TodoList.vue'
 
 export default {
   name: 'App',
   components: {
+    Groups,
     TodoList
   }
 }
 </script>
-<style>
+<style lang="scss" scoped>
 
-#app {
+.app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
   overflow: hidden;
+  display: flex;
+  border: 1px solid #ccc;
+  width: 420px;
+  margin: 0 auto;
 }
 </style>

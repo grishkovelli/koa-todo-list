@@ -45,7 +45,7 @@
         :class="{active: name === filter}"
         @click="filter = name"
         v-for="(name, index) in filters"
-        :key="index">{{name}}</div>
+        :key="index">{{name}} ({{counts[name]}})</div>
     </div>
   </div>
 </template>
@@ -59,11 +59,11 @@
   export default {
     name: 'TodoList',
     data: () => ({
-      newTask: null,
-      filter: 'All',
-      tasks: [],
-      filters: ['All', 'Active', 'Completed'],
-      colors: ['none', 'red', 'blue', 'green', 'gold']
+      newTask : null,
+      filter  : 'All',
+      tasks   : [],
+      filters : ['All', 'Active', 'Completed'],
+      colors  : ['none', 'red', 'blue', 'green', 'gold']
     }),
     components: {
       DropDown
@@ -146,9 +146,9 @@
           return
 
         if (this.filter === 'Active') {
-          tasks = this.tasks.filter(task => !task.completed)
+          tasks = this.activeTasks
         } else if (this.filter === 'Completed') {
-          tasks = this.tasks.filter(task => task.completed)
+          tasks = this.completedTasks
         }
 
         return tasks
@@ -159,6 +159,19 @@
             acc[formatedDate].push(val)
             return acc
           }, {})
+      },
+      activeTasks () {
+        return this.tasks.filter(task => !task.completed)
+      },
+      completedTasks () {
+        return this.tasks.filter(task => task.completed)
+      },
+      counts () {
+        return {
+          All       : this.tasks.length,
+          Active    : this.activeTasks.length,
+          Completed : this.completedTasks.length
+        }
       }
     }
   }
@@ -166,16 +179,14 @@
 
 <style lang="scss" scoped>
   .todolist {
-    width: 320px;
-    border: 1px solid #ccc;
-    margin: 0 auto;
+    width: 300px;
     padding: 12px 24px 12px 24px;
     display: flex;
     flex-direction: column;
 
     &__field {
-      padding: 12px 16px;
-      font-size: 16px;
+      padding: 12px 0;
+      font-size: 14px;
       border-width: 0 0 1px 0;
       margin-bottom: 8px;
 
@@ -253,7 +264,7 @@
       opacity: 0.3;
       border-radius: 8px;
       color: #fff;
-      font-size: 14px;
+      font-size: 12px;
 
       &:not(:last-child) {
         margin-right: 8px;

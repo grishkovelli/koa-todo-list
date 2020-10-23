@@ -17,16 +17,15 @@
 
       <div class="actions" v-if="selectedGroupId === group.id">
         <icon-button @click.stop="shareGroup(group.id)" name="share" />
-        <icon-button @click.stop="removeTask(group.id)" name="close" />
+        <icon-button @click.stop="removeGroup(group.id)" name="close" />
       </div>
     </div>
   </div>
 </template>
 
 <script>
+  import api from '../services/api.js'
   import IconButton from './IconButton'
-
-  const API = 'http://localhost:5000'
 
   export default {
     name: 'Groups',
@@ -46,7 +45,8 @@
     },
     methods: {
       async loadGroups () {
-        const resp = await fetch(`${API}/groups`)
+        const resp = await api.get('groups')
+
         if (resp.ok)
           this.groups = await resp.json()
         else
@@ -60,12 +60,7 @@
       },
       async createGroup () {
         const payload = { title: this.newGroup }
-        const headers = { 'Content-Type': 'application/json' }
-        const resp = await fetch(`${API}/groups`, {
-          method: 'post',
-          headers: headers,
-          body: JSON.stringify(payload)
-        })
+        const resp = await api.post('groups', JSON.stringify(payload))
 
         if (resp.ok) {
           this.groups.push(await resp.json())
@@ -74,12 +69,8 @@
           console.warn(resp.status)
         }
       },
-      async removeTask (id) {
-        const headers = { 'Content-Type': 'application/json' }
-        const resp = await fetch(`${API}/groups/${id}`, {
-          method: 'delete',
-          headers: headers
-        })
+      async removeGroup (id) {
+        const resp = await api.delete(`groups/${id}`)
 
         if (resp.ok) {
           const groupIdx = this.groups.findIndex(group => group.id === id)

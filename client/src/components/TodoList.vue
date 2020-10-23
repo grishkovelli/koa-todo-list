@@ -51,10 +51,9 @@
 </template>
 
 <script>
+  import api from '../services/api.js'
   import moment from 'moment'
   import DropDown from './DropDown'
-
-  const API = 'http://localhost:5000'
 
   export default {
     name: 'TodoList',
@@ -71,9 +70,12 @@
     created () {
       this.loadTasks()
     },
+    mounted () {
+    },
     methods: {
       async loadTasks () {
-        const resp = await fetch(`${API}/todos`)
+        const resp = await api.get('todos')
+
         if (resp.ok)
           this.tasks = await resp.json()
         else
@@ -81,12 +83,7 @@
       },
       async createTask () {
         const payload = { title: this.newTask }
-        const headers = { 'Content-Type': 'application/json' }
-        const resp = await fetch(`${API}/todos`, {
-          method: 'post',
-          headers: headers,
-          body: JSON.stringify(payload)
-        })
+        const resp = await api.post('todos', JSON.stringify(payload))
 
         if (resp.ok) {
           this.tasks.push(await resp.json())
@@ -97,12 +94,7 @@
       },
       async toggleTaskStatus (task) {
         const payload = { completed: !task.completed }
-        const headers = { 'Content-Type': 'application/json' }
-        const resp = await fetch(`${API}/todos/${task.id}`, {
-          method: 'put',
-          headers: headers,
-          body: JSON.stringify(payload)
-        })
+        const resp = await api.put(`todos/${task.id}`, JSON.stringify(payload))
 
         if (resp.ok)
           task.completed = payload.completed
@@ -110,11 +102,7 @@
           console.warn(resp.status)
       },
       async removeTask (id) {
-        const headers = { 'Content-Type': 'application/json' }
-        const resp = await fetch(`${API}/todos/${id}`, {
-          method: 'delete',
-          headers: headers
-        })
+        const resp = await api.delete(`todos/${id}`)
 
         if (resp.ok) {
           const taskIdx = this.tasks.findIndex(task => task.id === id)
@@ -125,12 +113,7 @@
       },
       async colorTask (color, task) {
         const payload = { color: color }
-        const headers = { 'Content-Type': 'application/json' }
-        const resp = await fetch(`${API}/todos/${task.id}`, {
-          method: 'put',
-          headers: headers,
-          body: JSON.stringify(payload)
-        })
+        const resp = await api.put(`todos/${task.id}`, JSON.stringify(payload))
 
         if (resp.ok)
           task.color = color

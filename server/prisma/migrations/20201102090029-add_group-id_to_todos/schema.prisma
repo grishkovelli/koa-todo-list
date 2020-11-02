@@ -1,11 +1,10 @@
 generator client {
   provider = "prisma-client-js"
-  previewFeatures = ["transactionApi"]
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url = "***"
 }
 
 enum Color {
@@ -19,16 +18,16 @@ enum Color {
 model Todo {
   @@map(name: "todos")
 
-  id        Int      @default(autoincrement()) @id
+  id        Int     @default(autoincrement()) @id
   title     String
-  completed Boolean  @default(false)
-  color     Color    @default(none)
+  completed Boolean @default(false)
+  color     Color   @default(none)
   groupId   Int?
   createdAt DateTime @default(now())
 }
 
 model Group {
   @@map(name: "groups")
-  id    Int    @default(autoincrement()) @id
+  id Int @default(autoincrement()) @id
   title String
 }

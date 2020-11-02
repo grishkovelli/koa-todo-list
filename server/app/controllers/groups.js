@@ -18,11 +18,17 @@ const create = async (ctx, next) => {
 
 const destroy = async (ctx, next) => {
   try {
-    await prisma.group.delete({
-      where: { id: parseInt(ctx.params.id) }
+    const groupId = parseInt(ctx.params.id)
+    const deleteGroup = prisma.group.delete({
+      where: { id: groupId }
     })
+    const deleteTodos = prisma.todo.deleteMany({
+      where: { groupId: groupId }
+    })
+    await prisma.$transaction([deleteGroup, deleteTodos])
     ctx.status = 204
-  } catch {
+  } catch (err) {
+    console.debug(err)
     ctx.status = 422
   }
 }

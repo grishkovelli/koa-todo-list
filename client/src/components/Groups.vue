@@ -2,20 +2,21 @@
   <div class="groups">
     <input
       class="groups__field"
-      v-model="newGroup"
+      v-model="state.newGroup"
       placeholder="New group"
       @keyup.enter="createGroup" />
 
     <div
       class="groups__item"
-      :class="{active: selectedGroupId === group.id}"
-      v-for="group in groups"
+      :class="{active: state.selectedGroupId === group.id}"
+      v-for="group in state.groups"
       :key="group.id"
       @click="selectGroup(group.id)"
+      @dragover.prevent
+      @drop.stop.prevent="onDrop($event, group.id)"
     >
       {{group.title}}
-
-      <div class="actions" v-if="selectedGroupId === group.id">
+      <div class="actions" v-if="state.selectedGroupId === group.id">
         <icon-button @click.stop="shareGroup(group.id)" name="share" />
         <icon-button @click.stop="removeGroup(group.id)" name="close" />
       </div>
@@ -24,19 +25,31 @@
 </template>
 
 <script>
-  import api from '../services/api.js'
   import IconButton from './IconButton'
+  import {
+    state,
+    setGroupId,
+    onDrop,
+    removeGroup,
+    createGroup,
+    loadGroups
+  } from '../store'
 
   export default {
     name: 'Groups',
+    setup () {
+      return {
+        state,
+        setGroupId,
+        onDrop,
+        removeGroup,
+        createGroup,
+        loadGroups
+      }
+    },
     props: {
       name: String
     },
-    data: () => ({
-      selectedGroupId: null,
-      groups: [],
-      newGroup: null
-    }),
     components: {
       IconButton
     },
@@ -44,41 +57,12 @@
       this.loadGroups()
     },
     methods: {
-      async loadGroups () {
-        const resp = await api.get('groups')
-
-        if (resp.ok)
-          this.groups = await resp.json()
-        else
-          console.warn(resp.status)
-      },
       selectGroup (groupId) {
-        this.selectedGroupId = this.selectedGroupId === groupId ? null: groupId
+        this.setGroupId(this.state.selectedGroupId === groupId ? null: groupId)
       },
       shareGroup (groupId) {
         console.debug(`Share the group ${groupId}`)
-      },
-      async createGroup () {
-        const payload = { title: this.newGroup }
-        const resp = await api.post('groups', JSON.stringify(payload))
-
-        if (resp.ok) {
-          this.groups.push(await resp.json())
-          this.newGroup = null
-        } else {
-          console.warn(resp.status)
-        }
-      },
-      async removeGroup (id) {
-        const resp = await api.delete(`groups/${id}`)
-
-        if (resp.ok) {
-          const groupIdx = this.groups.findIndex(group => group.id === id)
-          this.groups.splice(groupIdx, 1)
-        } else {
-          console.warn(resp.status)
-        }
-      },
+      }
     }
   }
 </script>
@@ -110,6 +94,7 @@
       text-align: left;
       margin-bottom: 10px;
       cursor: pointer;
+      padding: 10px;
     }
 
     &__item.active {

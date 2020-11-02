@@ -2,7 +2,7 @@
   <div class="todolist">
     <input
       class="todolist__field"
-      v-model="newTask"
+      v-model="state.newTask"
       placeholder="New task"
       @keyup.enter="createTask" />
 
@@ -16,7 +16,9 @@
           :class="{completed: task.completed}"
           v-for="task in tasks"
           :key="task.id"
+          draggable="true"
           @click="toggleTaskStatus(task)"
+          @dragstart="startDrag($event, task)"
         >
           {{task.title}}
           <drop-down>
@@ -51,16 +53,31 @@
 </template>
 
 <script>
-  import api from '../services/api.js'
   import moment from 'moment'
   import DropDown from './DropDown'
+  import {
+    state,
+    loadTasks,
+    createTask,
+    toggleTaskStatus,
+    removeTask,
+    colorTask
+  } from '../store'
 
   export default {
     name: 'TodoList',
+    setup () {
+      return {
+        state,
+        loadTasks,
+        createTask,
+        toggleTaskStatus,
+        removeTask,
+        colorTask
+      }
+    },
     data: () => ({
-      newTask : null,
       filter  : 'All',
-      tasks   : [],
       filters : ['All', 'Active', 'Completed'],
       colors  : ['none', 'red', 'blue', 'green', 'gold']
     }),
@@ -73,68 +90,26 @@
     mounted () {
     },
     methods: {
-      async loadTasks () {
-        const resp = await api.get('todos')
-
-        if (resp.ok)
-          this.tasks = await resp.json()
-        else
-          console.warn(resp.status)
-      },
-      async createTask () {
-        const payload = { title: this.newTask }
-        const resp = await api.post('todos', JSON.stringify(payload))
-
-        if (resp.ok) {
-          this.tasks.push(await resp.json())
-          this.newTask = null
-        } else {
-          console.warn(resp.status)
-        }
-      },
-      async toggleTaskStatus (task) {
-        const payload = { completed: !task.completed }
-        const resp = await api.put(`todos/${task.id}`, JSON.stringify(payload))
-
-        if (resp.ok)
-          task.completed = payload.completed
-        else
-          console.warn(resp.status)
-      },
-      async removeTask (id) {
-        const resp = await api.delete(`todos/${id}`)
-
-        if (resp.ok) {
-          const taskIdx = this.tasks.findIndex(task => task.id === id)
-          this.tasks.splice(taskIdx, 1)
-        } else {
-          console.warn(resp.status)
-        }
-      },
-      async colorTask (color, task) {
-        const payload = { color: color }
-        const resp = await api.put(`todos/${task.id}`, JSON.stringify(payload))
-
-        if (resp.ok)
-          task.color = color
-        else
-          console.warn(resp.status)
+      startDrag (ev, item) {
+        ev.dataTransfer.setData('taskId', item.id)
       }
     },
     computed: {
       filteredTasks () {
-        let tasks = this.tasks
+        let tasks = this.state.tasks
 
-        if (!tasks.length)
-          return
-
-        if (this.filter === 'Active') {
-          tasks = this.activeTasks
-        } else if (this.filter === 'Completed') {
-          tasks = this.completedTasks
+        if (this.state.selectedGroupId) {
+          tasks = tasks.filter(task => task.groupId === this.state.selectedGroupId)
         }
 
         return tasks
+          .filter(task => {
+            if (this.filter === 'Active')
+              return !task.completed
+            else if (this.filter === 'Completed')
+              return task.completed
+            return true
+          })
           .sort((a, b) => moment(b.createdAt) - moment(a.createdAt))
           .reduce((acc, val) => {
             const formatedDate = moment(val.createdAt).format('ll')
@@ -143,15 +118,32 @@
             return acc
           }, {})
       },
+      allTasks () {
+        if (this.state.selectedGroupId) {
+          return this.state.tasks.filter(task => task.groupId === this.state.selectedGroupId)
+        } else {
+          return this.state.tasks
+        }
+      },
       activeTasks () {
-        return this.tasks.filter(task => !task.completed)
+        if (this.state.selectedGroupId) {
+          return this.state.tasks.filter(task => !task.completed
+            && task.groupId === this.state.selectedGroupId)
+        } else {
+          return this.state.tasks.filter(task => !task.completed)
+        }
       },
       completedTasks () {
-        return this.tasks.filter(task => task.completed)
+        if (this.state.selectedGroupId) {
+          return this.state.tasks.filter(task => task.completed
+            && task.groupId === this.state.selectedGroupId)
+        } else {
+          return this.state.tasks.filter(task => task.completed)
+        }
       },
       counts () {
         return {
-          All       : this.tasks.length,
+          All       : this.allTasks.length,
           Active    : this.activeTasks.length,
           Completed : this.completedTasks.length
         }
@@ -182,6 +174,7 @@
   .tasks {
     height: 350px;
     overflow-y: auto;
+    user-select: none;
 
     &__date {
       text-align: left;
@@ -200,6 +193,7 @@
       margin-bottom: 5px;
       font-size: 16px;
       padding: 0 0 0 16px;
+      user-select: none;
     }
 
     &__item.completed {

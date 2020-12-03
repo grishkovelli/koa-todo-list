@@ -1,18 +1,21 @@
 import { Component } from 'react'
+import { Context } from '../../store'
 
 import './NewTask.scss'
 
 class NewTask extends Component {
-  constructor() {
-    super()
+  static contextType = Context
 
-    this.state = {
-      color: "red"
+  onClickEnter = (e) => {
+    const [state, dispatch] = this.context
+
+    if (e.key === 'Enter') {
+      dispatch({
+        type: 'addTask',
+        payload: { title: e.target.value, completed: false }
+      })
+      e.target.value = null
     }
-  }
-
-  onClickEnter (e) {
-    console.debug(e.key)
   }
 
   render () {

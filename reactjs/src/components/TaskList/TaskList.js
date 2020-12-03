@@ -1,26 +1,19 @@
 import { Component } from 'react'
-
 import Task from '../Task'
+import { Context } from '../../store'
 import './TaskList.scss'
 
 class TaskList extends Component {
-  constructor() {
-    super()
-    this.state = {
-      tasks: [
-        { title: 'Create simple ReactJs App', completed: true },
-        { title: 'Buy car', completed: false },
-        { title: 'Read book', completed: false }
-      ]
-    }
-  }
+  static contextType = Context
 
   render () {
+    const [state] = this.context
+
     return (
       <div className="task-list">
-        {this.state.tasks.map((task, index) =>
-            <Task {...task} key={index} />
-          )}
+        {
+          state.tasks.map(task => <Task {...task} key={task.id} />)
+        }
       </div>
     )
   }
